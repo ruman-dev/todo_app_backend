@@ -1,15 +1,16 @@
-package todosRoutes
+package handlers
 
 import (
-	"ecom_project/cmd/internal/domain"
+	"ecom_project/internal/domain/todos"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"slices"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
-var todos = []domain.Todos{
+var taskList = []todos.Todos{
 	{
 		Id:          1,
 		Title:       "First Task",
@@ -36,26 +37,15 @@ var todos = []domain.Todos{
 	},
 }
 
-func Routes() chi.Router {
-	r := chi.NewRouter()
-
-	r.Get("/", listTasks)
-	r.Post("/", createTask)
-	r.Put("/{id}", updateTask)
-	r.Delete("/{id}", deleteTask)
-
-	return r
-}
-
-func listTasks(w http.ResponseWriter, r *http.Request) {
+func ListTasks(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(todos)
+	json.NewEncoder(w).Encode(taskList)
 }
 
-func createTask(w http.ResponseWriter, r *http.Request) {
+func CreateTask(w http.ResponseWriter, r *http.Request) {
 
-	var newTask domain.Todos
+	var newTask todos.Todos
 
 	decoder := json.NewDecoder(r.Body)
 
@@ -67,16 +57,16 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newTask.Id = len(todos) + 1
+	newTask.Id = len(taskList) + 1
 
-	todos = append(todos, newTask)
+	taskList = append(taskList, newTask)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(todos)
+	json.NewEncoder(w).Encode(taskList)
 }
 
-func updateTask(w http.ResponseWriter, r *http.Request) {
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	taskId := chi.URLParam(r, "id")
 
@@ -86,7 +76,7 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Task Id", http.StatusBadRequest)
 		return
 	}
-	var updatedTask domain.Todos
+	var updatedTask todos.Todos
 	var found bool
 
 	decoder := json.NewDecoder(r.Body)
@@ -98,15 +88,15 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 	}
 	found = false
 
-	for i := 0; i < len(todos); i++ {
-		if todos[i].Id == id {
-			todos[i].Title = updatedTask.Title
-			todos[i].Description = updatedTask.Description
-			todos[i].IsCompleted = updatedTask.IsCompleted
+	for i := 0; i < len(taskList); i++ {
+		if taskList[i].Id == id {
+			taskList[i].Title = updatedTask.Title
+			taskList[i].Description = updatedTask.Description
+			taskList[i].IsCompleted = updatedTask.IsCompleted
 
 			found = true
 
-			updatedTask = todos[i]
+			updatedTask = taskList[i]
 			break
 		}
 	}
@@ -119,7 +109,7 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func deleteTask(w http.ResponseWriter, r *http.Request) {
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskId := chi.URLParam(r, "id")
 
 	id, err := strconv.Atoi(taskId)
@@ -129,11 +119,11 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for i := 0; i < len(todos); i++ {
-		if todos[i].Id == id {
-			todos = slices.Delete(todos, i, i+1)
+	for i := 0; i < len(taskList); i++ {
+		if taskList[i].Id == id {
+			taskList = slices.Delete(taskList, i, i+1)
 		}
 	}
 
-	json.NewEncoder(w).Encode(&todos)
+	json.NewEncoder(w).Encode(&taskList)
 }

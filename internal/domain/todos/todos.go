@@ -1,4 +1,4 @@
-package domain
+package todos
 
 type Todos struct {
 	Id          int    `json:"id"`
